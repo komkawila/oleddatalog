@@ -1,6 +1,4 @@
-# flutter_app_com
-
-A new Flutter project.
+# OLED Datalog
 
 ## Getting Started
 
