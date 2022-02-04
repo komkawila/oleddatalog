@@ -1,18 +1,24 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:flutter/material.dart';
-import 'package:flutter_app_com/bluetooth/valueProvider.dart';
-import 'package:flutter_blue/flutter_blue.dart';
-import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+// ignore_for_file: file_names, deprecated_member_use
+
 import 'dart:convert' show utf8;
-import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 
 class SettingPage extends StatefulWidget {
   final BluetoothCharacteristic? characteristicTX;
   final BluetoothCharacteristic? characteristicRX;
+  final double? vAlarm;
+  final double? frpAlarm;
+  final double? vfrpAlarm;
+  final int? modeType;
   const SettingPage(
-      {Key? key, required this.characteristicTX, this.characteristicRX})
+      {Key? key,
+      required this.characteristicTX,
+      required this.characteristicRX,
+      required this.vAlarm,
+      required this.frpAlarm,
+      required this.vfrpAlarm,
+      required this.modeType})
       : super(key: key);
 
   @override
@@ -20,206 +26,677 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  late List<LiveData> chartData;
-  late ChartSeriesController _chartSeriesController;
-  late TooltipBehavior _tooltipBehavior;
-  bool showFRT = false;
-  bool showVFRP = false;
-  bool showSPEED = false;
-  bool? isrunning;
-  late int count;
+  double _currentSliderValue1 = 0;
+  double _currentSliderValue2 = 0;
+  double _currentSliderValue3 = 0.00;
+  int _modeType = 0;
   @override
   void initState() {
-    _tooltipBehavior = TooltipBehavior(enable: true, duration:800,);
-    count = 0;
-    isrunning = false;
-    chartData = getChartData();
-    Timer.periodic(const Duration(milliseconds: 800), updateDataSource);
-    super.initState();
+    _currentSliderValue1 = widget.vAlarm!;
+    _currentSliderValue2 = widget.frpAlarm!;
+    _currentSliderValue3 = widget.vfrpAlarm!;
+    _modeType = widget.modeType!;
   }
 
-  String _dataParser(List<int> dataFromDevice) {
-    return utf8.decode(dataFromDevice);
-  }
-
-  @override
   Widget build(BuildContext context) {
+    var sizewidth = MediaQuery.of(context).size.width;
+    var sizeheight = MediaQuery.of(context).size.height;
     return SafeArea(
         child: Scaffold(
-      appBar: AppBar(),
-      body: Column(
-        children: [
-          Center(
-            child: Container(
-                height: 250, width: 500, child: getAddRemoveSeriesChart()),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              FlatButton(
-                  onPressed: () {
-                    setState(() {
-                      isrunning = true;
-                    });
-                  },
-                  child: const Text(
-                    'start',
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/images/setting-page/bg.jpg'),
+              fit: BoxFit.cover),
+        ),
+        child: Row(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  width: sizewidth * .05,
+                  height: sizeheight,
+                  // color: Colors.yellow,
+                ),
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: sizewidth * .95,
+                  height: sizeheight * .25,
+                  // color: Colors.red,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '    SETTING',
                     style: TextStyle(
-                        backgroundColor: Colors.green, color: Colors.white),
-                  )),
-              FlatButton(
-                onPressed: () {
-                  setState(() {
-                    isrunning = false;
-                  });
-                },
-                child: const Text(
-                  'stop',
-                  style: TextStyle(
-                      backgroundColor: Colors.red, color: Colors.white),
+                      fontFamily: 'Facon',
+                      fontSize: (sizewidth / 2) * 0.07,
+                      color: Color.fromRGBO(252, 248, 237, 1),
+                      shadows: const [
+                        Shadow(
+                            // bottomLeft
+                            offset: Offset(1.2, 1.2),
+                            color: Colors.red),
+                        Shadow(
+                            // bottomRight
+                            offset: Offset(1.2, 1.2),
+                            color: Colors.red),
+                        Shadow(
+                            // topRight
+                            offset: Offset(1.2, 1.2),
+                            color: Colors.red),
+                        Shadow(
+                            // topLeft
+                            offset: Offset(1.8, 1.8),
+                            color: Colors.red),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              Text(' ${context.watch<valueProvider>().frp}'),
-              // Text('   valueBle  === > ${valueBle}'),
-              Text('chartData.length ${chartData.length}'),
-              FlatButton(
-                onPressed: () {
-                  setState(() {
-                    chartData.clear();
-                    count = 0;
-                  });
-                },
-                child: Text(
-                  'Clear',
-                  style: TextStyle(
-                      backgroundColor: Colors.yellow, color: Colors.white),
+                Container(
+                  width: sizewidth * .95,
+                  height: sizeheight * .15,
+                  // color: Colors.green,
+                  child: Row(
+                    children: [
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .25,
+                        // color: Colors.white,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'VOLT ALARM',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .50,
+                        // color: Colors.yellow,
+                        child: Slider(
+                          value: _currentSliderValue1,
+                          min: 0,
+                          max: 15,
+                          divisions: 15,
+                          label: _currentSliderValue1.round().toString(),
+                          onChanged: (double newValue) {
+                            setState(() {
+                              _currentSliderValue1 = newValue;
+                            });
+                          },
+                          onChangeEnd: (value) {
+                            print('###### value1 ${value.toStringAsFixed(2)}');
+                            if (widget.characteristicRX != null) {
+                              sendData('AT+BAT=${value.toStringAsFixed(2)}');
+                            }
+                          },
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .15,
+                        // color: Colors.white,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_currentSliderValue1.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .10,
+                        // color: Colors.yellow,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '  V',
+                          style: TextStyle(
+                            // fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.06,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                Container(
+                  width: sizewidth * .95,
+                  height: sizeheight * .15,
+                  // color: Colors.red,
+                  child: Row(
+                    children: [
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .25,
+                        // color: Colors.white,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'FRP ALARM',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .50,
+                        // color: Colors.yellow,
+                        child: Slider(
+                          value: _currentSliderValue2,
+                          min: 0,
+                          max: 240,
+                          divisions: 240,
+                          label: _currentSliderValue2.round().toString(),
+                          onChanged: (double newValue) {
+                            setState(() {
+                              _currentSliderValue2 = newValue;
+                            });
+                          },
+                          onChangeEnd: (value) {
+                            print(
+                                '###### value2 ${value.round().toStringAsFixed(0)}');
+                            if (widget.characteristicRX != null) {
+                              sendData('AT+FRP=${value.toStringAsFixed(0)}');
+                            }
+                          },
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .15,
+                        // color: Colors.white,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_currentSliderValue2.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .10,
+                        // color: Colors.yellow,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '  Mpa',
+                          style: TextStyle(
+                            // fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.06,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: sizewidth * .95,
+                  height: sizeheight * .15,
+                  // color: Colors.green,
+                  child: Row(
+                    children: [
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .25,
+                        // color: Colors.white,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'VFRP ALARM',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .50,
+                        // color: Colors.yellow,
+                        child: Slider(
+                          value: _currentSliderValue3,
+                          min: 0.0,
+                          max: 5.0,
+                          divisions: 50,
+                          label: _currentSliderValue3.toStringAsFixed(2),
+                          onChanged: (double newValue) {
+                            setState(() {
+                              _currentSliderValue3 = newValue;
+                            });
+                          },
+                          onChangeEnd: (value) {
+                            print('###### value3 ${value.toStringAsFixed(2)}');
+                            if (widget.characteristicRX != null) {
+                              sendData('AT+VFRP=${value.toStringAsFixed(2)}');
+                            }
+                          },
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .15,
+                        // color: Colors.white,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${_currentSliderValue3.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .10,
+                        // color: Colors.yellow,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '  V',
+                          style: TextStyle(
+                            // fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.06,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: sizewidth * .95,
+                  height: sizeheight * .15,
+                  // color: Colors.red,
+                  child: Row(
+                    children: [
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .25,
+                        // color: Colors.white,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'MODE TYPE',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .50,
+                        // color: Colors.yellow,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FlatButton(
+                              minWidth: 100,
+                              // color: Colors.red,
+                              onPressed: () {
+                                print('#################AT+MTYPE=0');
+                                if (widget.characteristicRX != null) {
+                                  sendData('AT+MTYPE=0');
+                                }
+                                setState(() {
+                                  _modeType = 0;
+                                });
+                              },
+                              child: Text(
+                                '1',
+                                style: TextStyle(
+                                  fontFamily: 'Facon',
+                                  fontSize: (sizewidth / 2) * 0.05,
+                                  color: Color.fromRGBO(252, 248, 237, 1),
+                                  shadows: const [
+                                    Shadow(
+                                        // bottomLeft
+                                        offset: Offset(1.2, 1.2),
+                                        color: Colors.red),
+                                    Shadow(
+                                        // bottomRight
+                                        offset: Offset(1.2, 1.2),
+                                        color: Colors.red),
+                                    Shadow(
+                                        // topRight
+                                        offset: Offset(1.2, 1.2),
+                                        color: Colors.red),
+                                    Shadow(
+                                        // topLeft
+                                        offset: Offset(1.8, 1.8),
+                                        color: Colors.red),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            FlatButton(
+                              minWidth: 100,
+                              // color: Colors.green,
+                              onPressed: () {
+                                if (widget.characteristicRX != null) {
+                                  sendData('AT+MTYPE=1');
+                                  print('AT+MTYPE=1');
+                                }
+                                setState(() {
+                                  _modeType = 1;
+                                });
+                              },
+                              child: Text(
+                                '2',
+                                style: TextStyle(
+                                  fontFamily: 'Facon',
+                                  fontSize: (sizewidth / 2) * 0.05,
+                                  color: Color.fromRGBO(252, 248, 237, 1),
+                                  shadows: const [
+                                    Shadow(
+                                        // bottomLeft
+                                        offset: Offset(1.2, 1.2),
+                                        color: Colors.red),
+                                    Shadow(
+                                        // bottomRight
+                                        offset: Offset(1.2, 1.2),
+                                        color: Colors.red),
+                                    Shadow(
+                                        // topRight
+                                        offset: Offset(1.2, 1.2),
+                                        color: Colors.red),
+                                    Shadow(
+                                        // topLeft
+                                        offset: Offset(1.8, 1.8),
+                                        color: Colors.red),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .15,
+                        // color: Colors.white,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${(_modeType + 1).toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontFamily: 'Facon',
+                            fontSize: (sizewidth / 2) * 0.05,
+                            color: Color.fromRGBO(252, 248, 237, 1),
+                            shadows: const [
+                              Shadow(
+                                  // bottomLeft
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // bottomRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topRight
+                                  offset: Offset(1.2, 1.2),
+                                  color: Colors.red),
+                              Shadow(
+                                  // topLeft
+                                  offset: Offset(1.8, 1.8),
+                                  color: Colors.red),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: sizeheight * .15,
+                        width: (sizewidth * .95) * .10,
+                        // color: Colors.yellow,
+                        alignment: Alignment.centerLeft,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: sizewidth * .95,
+                  height: sizeheight * .15,
+                  // color: Colors.green,
+                  alignment: Alignment.centerRight,
+                  child: FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'EXIT',
+                      style: TextStyle(
+                        fontFamily: 'Facon',
+                        fontSize: (sizewidth / 2) * 0.06,
+                        color: Color.fromRGBO(252, 248, 237, 1),
+                        shadows: const [
+                          Shadow(
+                              // bottomLeft
+                              offset: Offset(1.2, 1.2),
+                              color: Colors.red),
+                          Shadow(
+                              // bottomRight
+                              offset: Offset(1.2, 1.2),
+                              color: Colors.red),
+                          Shadow(
+                              // topRight
+                              offset: Offset(1.2, 1.2),
+                              color: Colors.red),
+                          Shadow(
+                              // topLeft
+                              offset: Offset(1.8, 1.8),
+                              color: Colors.red),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     ));
   }
 
-  void getdataBle() {
-    if (widget.characteristicTX != null) {
-      widget.characteristicTX!.value.listen((data) {
-        final command = _dataParser(data).toString();
-        print('data page7 ========= > ${command}');
-        if (command.contains('frp1=')) {
-          final start = 'frp1=';
-          final end = '#';
-
-          final startIndex = command.indexOf(start);
-          final endIndex = command.indexOf(end);
-          final result =
-              command.substring(startIndex + start.length, endIndex).trim();
-          // context.read<valueProvider>().frp = double.parse(result);
-
-          print('Data ------------> frp = ${result}');
-          setState(() {
-            // valueBle = result;
-          });
-          // _getChartData(result);
-        }
-      });
-    }
-    // var provider = Provider.of<valueProvider>(context, listen: false);
-    // var frp = provider.frp;
-    // print('DATA FRP ----------- > ${frp}');
-  }
-
-  SfCartesianChart getAddRemoveSeriesChart() {
-    return SfCartesianChart(
-        series: <LineSeries<LiveData, int>>[
-          LineSeries<LiveData, int>(
-            onRendererCreated: (ChartSeriesController controller) {
-              _chartSeriesController = controller;
-            },
-            dataSource: chartData,
-            color: const Color.fromRGBO(192, 108, 132, 1),
-            xValueMapper: (LiveData sales, _) => sales.count,
-            yValueMapper: (LiveData sales, _) => sales.speed,
-            markerSettings: const MarkerSettings(isVisible: true),
-            enableTooltip: true,
-          ),
-        ],
-        primaryXAxis: NumericAxis(
-            majorGridLines: const MajorGridLines(width: 0),
-            edgeLabelPlacement: EdgeLabelPlacement.shift,
-            interval: 3,
-            title: AxisTitle(text: 'Time (seconds)')),
-        zoomPanBehavior: ZoomPanBehavior(
-            enablePinching: true, zoomMode: ZoomMode.x, enablePanning: true),
-        tooltipBehavior: _tooltipBehavior,
-        primaryYAxis: NumericAxis(
-            axisLine: const AxisLine(width: 0),
-            majorTickLines: const MajorTickLines(size: 0),
-            title: AxisTitle(text: 'Internet speed (Mbps)')));
-  }
-
-  ///Get the random data point
-  int _getRandomInt(int min, int max) {
-    final Random _random = Random();
-    return min + _random.nextInt(max - min);
-  }
-
-  // int time = 0;
-  // void updateDataSource(Timer timer) {
-  //   if (isrunning == true) {
-  //     chartData.add(LiveData(time++, (math.Random().nextInt(60) + 30)));
-  //     if (chartData.length == 2) {
-  //       chartData.removeAt(0);
-  //       _chartSeriesController.updateDataSource(
-  //           addedDataIndex: chartData.length - 1, removedDataIndex: 0);
-  //     } else {
-  //       _chartSeriesController.updateDataSource(
-  //           addedDataIndex: chartData.length - 1, removedDataIndex: 0);
-  //     }
-
-  //     _chartSeriesController.updateDataSource(
-  //         addedDataIndex: chartData.length - 1, removedDataIndex: 0);
-  //   } else {
-  //     return;
-  //   }
-  // }
-
-  void updateDataSource(Timer timer) {
-    if (isrunning == true) {
-      chartData.add(LiveData(count, (math.Random().nextInt(60) + 30)));
-      //   if (chartData.length == 2) {
-      //     chartData.removeAt(0);
-      //     _chartSeriesController.updateDataSource(
-      //         addedDataIndex: chartData.length - 1, removedDataIndex: 0);
-      //   } else {
-      //     _chartSeriesController.updateDataSource(
-      //         addedDataIndex: chartData.length - 1, removedDataIndex: 0);
-      //   }
-
-      //   _chartSeriesController.updateDataSource(
-      //       addedDataIndex: chartData.length - 1, removedDataIndex: 0);
-      // } else {
-      //   return;
-      // }
-
-      count = count + 1;
+  void sendData(String value) async {
+    if (widget.characteristicRX!.uuid != null) {
+      widget.characteristicRX!.write(utf8.encode(value));
     }
   }
-
-  List<LiveData> getChartData() {
-    return <LiveData>[];
-  }
-
-  @override
-  void dispose() {
-    chartData.clear();
-    super.dispose();
-  }
-}
-
-class LiveData {
-  LiveData(this.count, this.speed);
-  final int count;
-  final num speed;
 }

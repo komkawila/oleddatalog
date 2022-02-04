@@ -4,9 +4,10 @@ import 'package:flutter_app_com/Page/Home.dart';
 import 'package:flutter_app_com/bluetooth/valueProvider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
+import 'package:wakelock/wakelock.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Wakelock.enable();
   SystemChrome.setPreferredOrientations(
           [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])
       .then((_) {
@@ -25,11 +26,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setEnabledSystemUIOverlays([]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
+        fontFamily: 'Facon',
         primarySwatch: Colors.blue,
         textTheme: GoogleFonts.srirachaTextTheme(
           Theme.of(context)

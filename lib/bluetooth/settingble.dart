@@ -297,6 +297,28 @@ class _DeviceScreenState extends State<DeviceScreen> {
           final result = command.substring(len + 1, command.length - 1).trim();
           context.read<valueProvider>().pvfrp = double.parse(result);
           print('########## vfrp_= = ${result}');
+        } // xxx
+        else if (command.indexOf("a_b=") != -1) {
+          final result = command.substring(len + 1, command.length - 1).trim();
+          context.read<valueProvider>().voltalarm = double.parse(result);
+          print('########## a_b= = ${result}');
+        } else if (command.indexOf("a_f=") != -1) {
+          final result = command.substring(len + 1, command.length - 1).trim();
+          context.read<valueProvider>().frpalarm = double.parse(result);
+          print('########## a_f= = ${result}');
+        } else if (command.indexOf("a_vf=") != -1) {
+          final result = command.substring(len + 1, command.length - 1).trim();
+          context.read<valueProvider>().vfrpalarm = double.parse(result);
+          print('########## a_vf= = ${result}');
+        } else if (command.indexOf("m_ty=") != -1) {
+          final result = command.substring(len + 1, command.length - 1).trim();
+          context.read<valueProvider>().modetype = int.parse(result);
+          print('########## m_ty= = ${result}');
+        } else if (command.indexOf("MODE=") != -1) {
+          
+          final result = command.substring(len + 1, command.length - 1).trim();
+          context.read<valueProvider>().mode = int.parse(result);
+          print('########## MODE= = ${result}');
         }
       });
     }
